@@ -1,0 +1,76 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+  echo "This script must be run as root" 1>&2
+  exit 1
+fi
+
+PLUGIN_DIR="/var/lib/dokku/plugins"
+
+install_dokku() {
+  if [[ -f "/usr/local/bin/dokku" ]]; then
+    echo "Dokku installed already"
+  else
+    echo "Installing Dokku"
+    wget -qO- https://raw.github.com/progrium/dokku/v0.2.3/bootstrap.sh | sudo DOKKU_TAG=v0.2.3 bash
+  fi
+}
+
+update_plugin() {
+  local gitrepo=$1
+  local dir=$2
+  local fulldir="$PLUGIN_DIR/$dir"
+
+  if [[ -d "$fulldir" ]]; then
+    echo "Updating $dir plugin"
+    cd $fulldir
+    git pull origin master
+  else
+    echo "Installing $dir plugin"
+    cd $PLUGIN_DIR
+    git clone $gitrepo $dir
+    cd $dir
+  fi
+  if [[ -f "install" ]]; then
+    dokku plugins-install
+  fi
+}
+
+install_dokku
+update_plugin https://github.com/scottatron/dokku-rebuild rebuild
+update_plugin https://github.com/neam/dokku-custom-domains custom-domains
+update_plugin https://github.com/firstandthird/dokku-buildui buildui
+update_plugin https://github.com/firstandthird/dokku-hipchat hipchat
+update_plugin https://github.com/firstandthird/dokku-continuous continuous
+update_plugin https://github.com/dyson/dokku-docker-options docker-options
+
+if [[ ! -f "/home/dokku/VHOST" ]]; then
+  echo "Please enter domain: "
+  read domain
+  echo $domain > /home/dokku/VHOST
+fi
+
+if [[ ! -f "/home/dokku/dokkurc" ]]; then
+  echo "Enter Hipchat token:"
+  read hipchat_token
+  if [[ -n "$hipchat_token" ]]; then
+    echo "export HIPCHAT_TOKEN=$hipchat_token" > /home/dokku/dokkurc
+    echo "export HIPCHAT_ROOM_ID=General" >> /home/dokku/dokkurc
+    echo "export HIPCHAT_NOTIFY=0" >> /home/dokku/dokkurc
+    echo "export HIPCHAT_FROM=Dokku" >> /home/dokku/dokkurc
+    echo "Hipchat plugin setup complete"
+  fi
+fi
+
+if [[ ! -d "/home/dokku/continuous" ]]; then
+  echo "Enter github token:"
+  read github_token
+  if [[ -n "$github_token" ]]; then
+    dokku continuous:start $github_token
+    echo "Continous Deployment setup complete"
+  fi
+fi
+
+
+echo "DOKKU SETUP COMPLETE"
+
