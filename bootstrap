@@ -1,0 +1,5 @@
+#!/bin/bash
+
+wget https://raw.githubusercontent.com/firstandthird/dokku-init/master/init-dokku -O /usr/local/bin/init-dokku
+chmod +x /usr/local/bin/init-dokku
+echo "Installed, now run sudo init-dokku"
