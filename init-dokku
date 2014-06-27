@@ -43,6 +43,8 @@ update_plugin https://github.com/firstandthird/dokku-buildui buildui
 update_plugin https://github.com/firstandthird/dokku-hipchat hipchat
 update_plugin https://github.com/firstandthird/dokku-continuous continuous
 update_plugin https://github.com/dyson/dokku-docker-options docker-options
+update_plugin https://github.com/cedricziel/dokku-deployment-keys deployment-keys
+update_plugin https://github.com/cedricziel/dokku-hostkeys-plugin hostkeys
 
 if [[ ! -f "/home/dokku/VHOST" ]]; then
   echo "Please enter domain: "
